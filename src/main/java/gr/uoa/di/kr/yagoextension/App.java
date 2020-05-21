@@ -15,7 +15,7 @@ public class App {
 
 		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF); // suppress Jena's log4j WARN messages
 		System.setProperty("org.geotools.referencing.forceXY", "true"); // force (long lat) in geotools
-		FileInputStream propertiesFile = new FileInputStream("src/main/resources/execution.properties");
+		FileInputStream propertiesFile = new FileInputStream("src/main/resources/matching_example.properties");
 		properties.load(new InputStreamReader(propertiesFile));
 		if (!properties.containsKey("mode")) {
 			throw new RuntimeException("Please provide an execution mode in the properties file.");

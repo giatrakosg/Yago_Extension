@@ -15,6 +15,8 @@ public class RepositoryFactory {
         return new OSIRepository(inputFile);
       case "osni":
         return new OSNIRepository(inputFile);
+      case "nbd":
+        return new NBDRepository(inputFile);
       default:
         throw new RuntimeException("Provided datasource is not supported");
     }
