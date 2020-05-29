@@ -6,38 +6,65 @@ import java.util.Set;
 
 public class NBDEntity extends Entity {
 
-  private String osniID;
-  private String division;
-  private Double area;
+  private String nbdID;
+  private String name;
   private Double areasqkm;
-  private Double perimeter;
+  private Integer fcode;
+  private Integer gnisID;
+  private Integer population;
+  private String stateName ;
+  private Integer stateFips;
+  private String hasSource ;
+  private String fipsCode;
 
-  public NBDEntity(String id, Set<String> labels, Geometry geom, String osniID, String div, Double area, Double areasqkm, Double perimeter) {
+  public NBDEntity(String id, Set<String> labels, Geometry geom, String nbdID, Double areasqkm, Integer fcode, Integer gnisID,
+                   Integer population, String stateName ,Integer stateFips, String hasSource, String fipsCode) {
     super(id, labels, geom);
-    this.osniID = osniID;
-    this.division = div;
-    this.area = area;
-    this.areasqkm = areasqkm;
-    this.perimeter = perimeter;
+    this.nbdID =nbdID ;
+    this.areasqkm = areasqkm ;
+    this.fcode = fcode ;
+    this.gnisID = gnisID ;
+    this.population = population ;
+    this.stateName = stateName ;
+    this.stateFips = stateFips ;
+    this.hasSource = hasSource ;
+    this.fipsCode = fipsCode ;
+
   }
 
-  public String getOsniID() {
-    return osniID;
+  public String getNbdID() {
+    return nbdID;
   }
 
-  public String getDivision() {
-    return division;
+  public String getName() {
+    return name;
   }
 
-  public Double getArea() {
-    return area;
+  public Integer getFcode() {
+    return fcode;
   }
 
-  public Double getAreasqkm() {
-    return areasqkm;
+  public Integer getGnisID() {
+    return gnisID;
   }
 
-  public Double getPerimeter() {
-    return perimeter;
+  public Integer getPopulation() {
+    return population;
+  }
+
+  public String getStateName() {
+    return stateName;
+  }
+
+  public Integer getStateFips() {
+    return stateFips;
+  }
+
+  public String getHasSource() {
+    return hasSource;
+  }
+
+  public String getFipsCode() {
+    return fipsCode;
   }
 }
