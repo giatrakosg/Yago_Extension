@@ -5,6 +5,7 @@ import gr.uoa.di.kr.yagoextension.readers.RDFReader;
 import gr.uoa.di.kr.yagoextension.vocabulary.RDFVocabulary;
 import gr.uoa.di.kr.yagoextension.vocabulary.YAGO2geoVocabulary;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.locationtech.jts.io.ParseException;
@@ -39,31 +40,40 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
     String asWkt = RDFVocabulary.AS_WKT;
 
     WKTReader wktReader = new WKTReader();
-    Model osni = RDFDataMgr.loadModel(this.inputFile);
-    ResIterator subjects = osni.listSubjects();
+    System.out.println(this.inputFile);
+    Model nbd = RDFDataMgr.loadModel(this.inputFile, Lang.TTL);
+    ResIterator subjects = nbd.listSubjects();
     /* iterate over the subjects of the input rdf file */
     while(subjects.hasNext()) {
 
       Resource subject = subjects.next();
+      System.out.println(subject);
       String subjectURI = subject.getURI();
       Set<String> labels = new HashSet<>();
-      String osniID = null;
-      String division = null;
-      Double area = null;
+      String nbdID = null;
       Double areasqkm = null;
-      Double perimeter = null;
+      Integer fcode = null ;
+      Integer gnisID = null ;
+      Integer population = null ;
+      String stateName = null ;
+      Integer stateFips = null ;
+      String hasSource = null ;
+
+
       String wkt = null;
-      StmtIterator subjectStmts = osni.listStatements(subject, null, (RDFNode) null);
+      StmtIterator subjectStmts = nbd.listStatements(subject, null, (RDFNode) null);
 
       /* get the information that is available for the current entity */
       while (subjectStmts.hasNext()) {
         Statement stmt = subjectStmts.next();
         String predicate = stmt.getPredicate().getURI();
         RDFNode object = stmt.getObject();
+        System.out.println(predicate);
+        /*
         if(predicate.equals(label))
           labels.add(object.asLiteral().getString());
         else if(predicate.equals(id))
-          osniID = object.asLiteral().getString();
+          nbdID = object.asLiteral().getString();
         else if(predicate.equals(asWkt))
           wkt = object.asLiteral().getString();
         else if(predicate.equals(areaSqKmProperty))
@@ -75,15 +85,19 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
         else if(predicate.equals(divisionProperty))
           division = "OSNI_" + object.asLiteral().getString().replace(" ", "_");
         else if(predicate.equals(hasGeometry)) {
-          wkt = osni.listObjectsOfProperty(object.asResource(), ResourceFactory.createProperty(asWkt))
+          wkt = nbd.listObjectsOfProperty(object.asResource(), ResourceFactory.createProperty(asWkt))
             .next().asLiteral().getString().replace("<http://www.opengis.net/def/crs/EPSG/0/4326>", "");
         }
+
+         */
       }
+
       if(labels.size() == 0)
         continue;
       /* create a new entity and add it to the repository */
       try {
-        entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), osniID, division, area, areasqkm, perimeter));
+        entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), nbdID, areasqkm, fcode, gnisID, population, stateName, stateFips,
+                hasSource));
       } catch (ParseException e) {
         e.printStackTrace();
       }
@@ -111,17 +125,15 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
       if(matchedEntities.contains(nbdEntity.getURI()))
         subject = ResourceFactory.createResource(matches.get(nbdEntity.getURI()));
       else
-        subject = ResourceFactory.createResource(YAGO2geoVocabulary.RESOURCE+"osnientity_"+nbdEntity.getOsniID());
-      Resource geometry = ResourceFactory.createResource(YAGO2geoVocabulary.ONTOLOGY+"Geometry_osni_"+nbdEntity.getOsniID());
-      if(nbdEntity.getArea() != null)
-        dataset.add(subject, area, ResourceFactory.createTypedLiteral(nbdEntity.getArea()));
+        subject = ResourceFactory.createResource(YAGO2geoVocabulary.RESOURCE+"nbdentity"+nbdEntity.getNbdID());
+      Resource geometry = ResourceFactory.createResource(YAGO2geoVocabulary.ONTOLOGY+"Geometry_osni_"+nbdEntity.getNbdID());
+      if(nbdEntity.getAreasqkm() != null)
+        dataset.add(subject, area, ResourceFactory.createTypedLiteral(nbdEntity.getAreasqkm()));
       if(nbdEntity.getAreasqkm() != null)
         dataset.add(subject, areasqkm, ResourceFactory.createTypedLiteral(nbdEntity.getAreasqkm()));
-      if(nbdEntity.getPerimeter() != null)
-        dataset.add(subject, perimeter, ResourceFactory.createTypedLiteral(nbdEntity.getPerimeter()));
-      dataset.add(subject, id, ResourceFactory.createTypedLiteral(nbdEntity.getOsniID()));
+      dataset.add(subject, id, ResourceFactory.createTypedLiteral(nbdEntity.getNbdID()));
       nbdEntity.getLabels().forEach(label -> dataset.add(subject, name, ResourceFactory.createStringLiteral(label)));
-      dataset.add(subject, type, ResourceFactory.createResource(YAGO2geoVocabulary.ONTOLOGY+nbdEntity.getDivision()));
+      //dataset.add(subject, type, ResourceFactory.createResource(YAGO2geoVocabulary.ONTOLOGY+nbdEntity.getDivision()));
       dataset.add(subject, hasGeometry, geometry);
       dataset.add(geometry, asWKT, ResourceFactory.createPlainLiteral(nbdEntity.getGeometry().toText()));
     }

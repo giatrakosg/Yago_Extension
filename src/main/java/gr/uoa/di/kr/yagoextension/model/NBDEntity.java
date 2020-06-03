@@ -18,7 +18,7 @@ public class NBDEntity extends Entity {
   private String fipsCode;
 
   public NBDEntity(String id, Set<String> labels, Geometry geom, String nbdID, Double areasqkm, Integer fcode, Integer gnisID,
-                   Integer population, String stateName ,Integer stateFips, String hasSource, String fipsCode) {
+                   Integer population, String stateName ,Integer stateFips, String hasSource) {
     super(id, labels, geom);
     this.nbdID =nbdID ;
     this.areasqkm = areasqkm ;
@@ -28,12 +28,15 @@ public class NBDEntity extends Entity {
     this.stateName = stateName ;
     this.stateFips = stateFips ;
     this.hasSource = hasSource ;
-    this.fipsCode = fipsCode ;
 
   }
 
   public String getNbdID() {
     return nbdID;
+  }
+
+  public Double getAreasqkm() {
+    return areasqkm;
   }
 
   public String getName() {
