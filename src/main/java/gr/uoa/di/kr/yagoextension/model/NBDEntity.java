@@ -20,7 +20,7 @@ public class NBDEntity extends Entity {
   public NBDEntity(String id, Set<String> labels, Geometry geom, String nbdID, Double areasqkm, Integer fcode, Integer gnisID,
                    Integer population, String stateName ,Integer stateFips, String hasSource) {
     super(id, labels, geom);
-    this.nbdID =nbdID ;
+    this.nbdID = nbdID ;
     this.areasqkm = areasqkm ;
     this.fcode = fcode ;
     this.gnisID = gnisID ;

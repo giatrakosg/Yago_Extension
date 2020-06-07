@@ -51,11 +51,11 @@ class YAGORepository extends Repository<Entity> implements TSVReader {
             labels.put(subject, new HashSet<>(Collections.singletonList(label)));
         }
         else if(predicate.contains(YAGOVocabulary.HAS_LATITUDE_TSV)) {
-          String object = record.get(3);
+          String object = record.get(2);
           latitudes.put(subject, object);
         }
         else if(predicate.contains(YAGOVocabulary.HAS_LONGITUDE_TSV)) {
-          String object = record.get(3);
+          String object = record.get(2);
           longitudes.put(subject, object);
         }
       }

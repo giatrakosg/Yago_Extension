@@ -30,24 +30,24 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
   @Override
   public void readRDF() {
 
-    String id = "http://www.nidirect.gov.uk/ontology/hasOSNI_ID";
-    String label = "http://www.nidirect.gov.uk/ontology/hasOSNI_Name";
-    String divisionProperty = "http://www.nidirect.gov.uk/ontology/hasOSNI_Class";
-    String areaProperty = "http://www.nidirect.gov.uk/ontology/hasOSNI_Area";
-    String areaSqKmProperty = "http://www.nidirect.gov.uk/ontology/hasOSNI_AreaSqKM";
-    String perimeterProperty = "http://www.nidirect.gov.uk/ontology/hasOSNI_Perimeter";
+    String base = "http://example.com/ontology#";
+
+    String areaProp = base + "has_AREASQKM";
+    String fcodeProp = base + "has_FCODE" ;
+    String gnisidProp = base + "has_GNIS_ID" ;
+    String sourceProp = base + "has_SOURCE_DAT" ;
+    String statenameProp = base + "has_STATE_NAME" ;
+
     String hasGeometry = RDFVocabulary.HAS_GEOMETRY;
     String asWkt = RDFVocabulary.AS_WKT;
 
     WKTReader wktReader = new WKTReader();
-    System.out.println(this.inputFile);
     Model nbd = RDFDataMgr.loadModel(this.inputFile, Lang.TTL);
     ResIterator subjects = nbd.listSubjects();
     /* iterate over the subjects of the input rdf file */
     while(subjects.hasNext()) {
 
       Resource subject = subjects.next();
-      System.out.println(subject);
       String subjectURI = subject.getURI();
       Set<String> labels = new HashSet<>();
       String nbdID = null;
@@ -63,33 +63,34 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
       String wkt = null;
       StmtIterator subjectStmts = nbd.listStatements(subject, null, (RDFNode) null);
 
+      Integer id = 0 ;
       /* get the information that is available for the current entity */
       while (subjectStmts.hasNext()) {
         Statement stmt = subjectStmts.next();
         String predicate = stmt.getPredicate().getURI();
         RDFNode object = stmt.getObject();
-        System.out.println(predicate);
-        /*
-        if(predicate.equals(label))
+
+        id++;
+        nbdID = id.toString() ;
+        if(predicate.equals(statenameProp))
           labels.add(object.asLiteral().getString());
-        else if(predicate.equals(id))
-          nbdID = object.asLiteral().getString();
         else if(predicate.equals(asWkt))
           wkt = object.asLiteral().getString();
-        else if(predicate.equals(areaSqKmProperty))
+        else if(predicate.equals(areaProp))
           areasqkm = object.asLiteral().getDouble();
-        else if(predicate.equals(areaProperty))
-          area = object.asLiteral().getDouble();
-        else if(predicate.equals(perimeterProperty))
-          perimeter = object.asLiteral().getDouble();
-        else if(predicate.equals(divisionProperty))
-          division = "OSNI_" + object.asLiteral().getString().replace(" ", "_");
+        else if(predicate.equals(fcodeProp))
+          fcode = object.asLiteral().getInt();
+        else if(predicate.equals(statenameProp))
+          stateName = object.asLiteral().getString();
+        else if(predicate.equals(sourceProp))
+          hasSource = object.asLiteral().getString();
+        else if(predicate.equals(gnisidProp))
+          gnisID = object.asLiteral().getInt();
         else if(predicate.equals(hasGeometry)) {
           wkt = nbd.listObjectsOfProperty(object.asResource(), ResourceFactory.createProperty(asWkt))
             .next().asLiteral().getString().replace("<http://www.opengis.net/def/crs/EPSG/0/4326>", "");
         }
 
-         */
       }
 
       if(labels.size() == 0)
