@@ -8,13 +8,25 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
+import org.geotools.data.DataStore;
+import org.geotools.data.DataStoreFinder;
+import org.geotools.data.shapefile.ShapefileDataStore;
+import org.geotools.data.FeatureSource;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.data.store.ContentFeatureCollection;
+import org.geotools.data.store.ContentFeatureSource;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
-import java.io.OutputStream;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
+import java.util.logging.Filter;
 
 class NBDRepository extends Repository<NBDEntity> implements RDFReader {
 
@@ -24,9 +36,40 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
 
   @Override
   public void read() {
-    this.readRDF();
+    try {
+      this.readSHP();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
+  public void readSHP() throws IOException {
+      File file = new File(this.inputFile);
+      URL url = null;
+      try {
+          url = file.toURI().toURL();
+      } catch (MalformedURLException e) {
+          e.printStackTrace();
+      }
+      Map<String, Object> map = new HashMap<>();
+      map.put("url", url);
 
+      DataStore dataStore = DataStoreFinder.getDataStore(map);
+      String typeName = dataStore.getTypeNames()[0];
+
+      FeatureSource<SimpleFeatureType, SimpleFeature> source =
+              dataStore.getFeatureSource(typeName);
+
+      FeatureCollection<SimpleFeatureType, SimpleFeature> collection = source.getFeatures();
+      try (FeatureIterator<SimpleFeature> features = collection.features()) {
+        while (features.hasNext()) {
+          SimpleFeature feature = features.next();
+          System.out.print(feature.getID());
+          System.out.print(": ");
+          System.out.println(feature.getDefaultGeometryProperty().getValue());
+        }
+      }
+
+  }
   @Override
   public void readRDF() {
 
@@ -36,13 +79,22 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
     String fcodeProp = base + "has_FCODE" ;
     String gnisidProp = base + "has_GNIS_ID" ;
     String sourceProp = base + "has_SOURCE_DAT" ;
-    String statenameProp = base + "has_STATE_NAME" ;
+    String nameProp = base + "has_GNIS_NAME" ;
 
     String hasGeometry = RDFVocabulary.HAS_GEOMETRY;
     String asWkt = RDFVocabulary.AS_WKT;
 
+    InputStream inputstream = null;
+    try {
+      inputstream = new FileInputStream(this.inputFile);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+
     WKTReader wktReader = new WKTReader();
-    Model nbd = RDFDataMgr.loadModel(this.inputFile, Lang.TTL);
+    Model nbd = ModelFactory.createDefaultModel();
+    //Model nbd = RDFDataMgr.loadModel(this.inputFile, Lang.TTL);
+    RDFDataMgr.read(nbd,inputstream,Lang.TTL);
     ResIterator subjects = nbd.listSubjects();
     /* iterate over the subjects of the input rdf file */
     while(subjects.hasNext()) {
@@ -53,10 +105,10 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
       String nbdID = null;
       Double areasqkm = null;
       Integer fcode = null ;
-      Integer gnisID = null ;
+      String gnisID = null ;
       Integer population = null ;
-      String stateName = null ;
-      Integer stateFips = null ;
+      String name = null ;
+      //Integer stateFips = null ;
       String hasSource = null ;
 
 
@@ -72,23 +124,27 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
 
         id++;
         nbdID = id.toString() ;
-        if(predicate.equals(statenameProp))
+        if(predicate.equals(nameProp)){
           labels.add(object.asLiteral().getString());
+          name = object.asLiteral().getString();
+        }
         else if(predicate.equals(asWkt))
           wkt = object.asLiteral().getString();
         else if(predicate.equals(areaProp))
           areasqkm = object.asLiteral().getDouble();
         else if(predicate.equals(fcodeProp))
           fcode = object.asLiteral().getInt();
-        else if(predicate.equals(statenameProp))
-          stateName = object.asLiteral().getString();
         else if(predicate.equals(sourceProp))
           hasSource = object.asLiteral().getString();
         else if(predicate.equals(gnisidProp))
-          gnisID = object.asLiteral().getInt();
+          gnisID = object.asLiteral().getString();
         else if(predicate.equals(hasGeometry)) {
-          wkt = nbd.listObjectsOfProperty(object.asResource(), ResourceFactory.createProperty(asWkt))
-            .next().asLiteral().getString().replace("<http://www.opengis.net/def/crs/EPSG/0/4326>", "");
+            try {
+                wkt = nbd.listObjectsOfProperty(object.asResource(), ResourceFactory.createProperty(asWkt))
+                        .next().asLiteral().getString().replace("<http://www.opengis.net/def/crs/EPSG/0/4326>", "");
+            } catch (NoSuchElementException e) {
+                e.printStackTrace();
+            }
         }
 
       }
@@ -97,10 +153,12 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
         continue;
       /* create a new entity and add it to the repository */
       try {
-        entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), nbdID, areasqkm, fcode, gnisID, population, stateName, stateFips,
+        entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), nbdID, areasqkm, fcode, gnisID, population, name,
                 hasSource));
       } catch (ParseException e) {
         e.printStackTrace();
+      } catch (NullPointerException e){
+          e.printStackTrace();
       }
     }
 
