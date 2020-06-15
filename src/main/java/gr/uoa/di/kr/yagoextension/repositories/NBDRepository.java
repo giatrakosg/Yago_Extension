@@ -17,16 +17,20 @@ import org.geotools.data.store.ContentFeatureCollection;
 import org.geotools.data.store.ContentFeatureSource;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.Name;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.logging.Filter;
+
+import static org.apache.jena.vocabulary.VCARD4.hasSource;
 
 class NBDRepository extends Repository<NBDEntity> implements RDFReader {
 
@@ -43,6 +47,11 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
     }
   }
   public void readSHP() throws IOException {
+      String stateFips = "STATE_FIPS";
+      String nameProp = "STATE_NAME" ;
+      String populationProp = "POPULATION";
+      String areaProp = "AREASQKM";
+
       File file = new File(this.inputFile);
       URL url = null;
       try {
@@ -60,12 +69,32 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
               dataStore.getFeatureSource(typeName);
 
       FeatureCollection<SimpleFeatureType, SimpleFeature> collection = source.getFeatures();
+      int id = 0 ;
       try (FeatureIterator<SimpleFeature> features = collection.features()) {
         while (features.hasNext()) {
           SimpleFeature feature = features.next();
-          System.out.print(feature.getID());
-          System.out.print(": ");
-          System.out.println(feature.getDefaultGeometryProperty().getValue());
+
+            Set<String> labels = new HashSet<>();
+            Double areasqkm = null;
+            String fipsCode = null ;
+            Integer population = null ;
+            String name = null ;
+
+          for(org.opengis.feature.Property prop : feature.getProperties()){
+              String col = prop.getName().toString();
+              if (col.equals(nameProp)){
+                name = prop.getValue().toString();
+                labels.add(prop.getValue().toString());
+              }else if (col.equals(areaProp)){
+                areasqkm = Double.parseDouble(prop.getValue().toString());
+              } else if (col.equals(populationProp)){
+                  population = 0;
+              }
+          }
+          System.out.println(labels);
+          entities.add(new NBDEntity(Integer.toString(id), labels, (Geometry) feature.getDefaultGeometry(), areasqkm , population, name,
+                fipsCode));
+
         }
       }
 
@@ -153,7 +182,7 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
         continue;
       /* create a new entity and add it to the repository */
       try {
-        entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), nbdID, areasqkm, fcode, gnisID, population, name,
+        entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), areasqkm, population, name,
                 hasSource));
       } catch (ParseException e) {
         e.printStackTrace();
