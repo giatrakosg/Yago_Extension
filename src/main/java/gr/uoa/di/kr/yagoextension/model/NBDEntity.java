@@ -5,38 +5,38 @@ import org.locationtech.jts.geom.Geometry;
 import java.util.Set;
 
 public class NBDEntity extends Entity {
-  private String name;
-  private Double areasqkm;
-  private Integer population;
-  private String fipsCode;
+  private String gnisID;
+  private double shapeLength;
+  private double shapeArea;
+  private String datasetDesc;
+  private String fCode;
 
-  public NBDEntity(String id, Set<String> labels, Geometry geom, Double areasqkm, Integer population, String name , String fipsCode) {
+  public NBDEntity(String id, Set<String> labels, Geometry geom, String gnisID, double shapeLength, double shapeArea, String datasetDesc, String fCode) {
     super(id, labels, geom);
-    this.areasqkm = areasqkm ;
-    this.fipsCode = fipsCode ;
-    this.population = population ;
-    this.name = name ;
-
+    this.gnisID = gnisID;
+    this.shapeLength = shapeLength;
+    this.shapeArea = shapeArea;
+    this.datasetDesc = datasetDesc;
+    this.fCode = fCode;
   }
 
-
-  public Double getAreasqkm() {
-    return areasqkm;
+  public String getGnisID() {
+    return gnisID;
   }
 
-  public String getName() {
-    return name;
+  public double getShapeLength() {
+    return shapeLength;
   }
 
-  public Integer getPopulation() {
-    return population;
+  public double getShapeArea() {
+    return shapeArea;
   }
 
-  public String getFipsCode() {
-    return fipsCode;
+  public String getDatasetDesc() {
+    return datasetDesc;
   }
 
-  public String getNbdID() {
-    return this.getURI();
+  public String getfCode() {
+    return fCode;
   }
 }

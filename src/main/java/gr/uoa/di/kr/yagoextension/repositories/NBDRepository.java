@@ -73,15 +73,15 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
       try (FeatureIterator<SimpleFeature> features = collection.features()) {
         while (features.hasNext()) {
           SimpleFeature feature = features.next();
-
-            Set<String> labels = new HashSet<>();
-            Double areasqkm = null;
-            String fipsCode = null ;
-            Integer population = null ;
-            String name = null ;
+          Set<String> labels = new HashSet<>();
+          Double areasqkm = null;
+          String fipsCode = null ;
+          Integer population = null ;
+          String name = null ;
 
           for(org.opengis.feature.Property prop : feature.getProperties()){
               String col = prop.getName().toString();
+              System.out.print(" "+col+",");
               if (col.equals(nameProp)){
                 name = prop.getValue().toString();
                 labels.add(prop.getValue().toString());
@@ -91,16 +91,15 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
                   population = 0;
               }
           }
-          System.out.println(labels);
           entities.add(new NBDEntity(Integer.toString(id), labels, (Geometry) feature.getDefaultGeometry(), areasqkm , population, name,
                 fipsCode));
-
         }
       }
 
   }
   @Override
-  public void readRDF() {
+  public void readRDF
+() {
 
     String base = "http://example.com/ontology#";
 
