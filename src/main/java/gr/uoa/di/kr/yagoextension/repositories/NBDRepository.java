@@ -47,10 +47,7 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
     }
   }
   public void readSHP() throws IOException {
-      String stateFips = "STATE_FIPS";
-      String nameProp = "STATE_NAME" ;
-      String populationProp = "POPULATION";
-      String areaProp = "AREASQKM";
+      String nameProp = "NAME" ;
 
       File file = new File(this.inputFile);
       URL url = null;
@@ -74,27 +71,26 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
         while (features.hasNext()) {
           SimpleFeature feature = features.next();
           Set<String> labels = new HashSet<>();
-          Double areasqkm = null;
-          String fipsCode = null ;
-          Integer population = null ;
-          String name = null ;
+          HashMap<String,String> properties = new HashMap<String,String>();
 
           for(org.opengis.feature.Property prop : feature.getProperties()){
               String col = prop.getName().toString();
-              System.out.print(" "+col+",");
+              Object value = prop.getValue();
               if (col.equals(nameProp)){
-                name = prop.getValue().toString();
-                labels.add(prop.getValue().toString());
-              }else if (col.equals(areaProp)){
-                areasqkm = Double.parseDouble(prop.getValue().toString());
-              } else if (col.equals(populationProp)){
-                  population = 0;
+                labels.add(value.toString());
+              }else {
+                  if (value == null){
+                      properties.put(col, "nan");
+                  } else {
+                      properties.put(col,value.toString());
+                  }
               }
           }
-          entities.add(new NBDEntity(Integer.toString(id), labels, (Geometry) feature.getDefaultGeometry(), areasqkm , population, name,
-                fipsCode));
+          entities.add(new NBDEntity(Integer.toString(id), labels, (Geometry) feature.getDefaultGeometry(), properties));
+          id++;
         }
       }
+      dataStore.dispose();
 
   }
   @Override
@@ -180,24 +176,19 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
       if(labels.size() == 0)
         continue;
       /* create a new entity and add it to the repository */
-      try {
-        entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), areasqkm, population, name,
-                hasSource));
-      } catch (ParseException e) {
-        e.printStackTrace();
-      } catch (NullPointerException e){
-          e.printStackTrace();
-      }
+        //entities.add(new NBDEntity(subjectURI, labels, wktReader.read(wkt), areasqkm, population, name,
+         //       hasSource));
+
     }
 
   }
 
   @Override
   public void generate(Map<String, String> matches, OutputStream datasetFile) {
-
+    /*
     Model dataset = ModelFactory.createDefaultModel();
     Set<String> matchedEntities = matches.keySet();
-
+    entities.
     Property area = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasOSNI_Area");
     Property areasqkm = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasOSNI_AreaSqKm");
     Property perimeter = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasOSNI_Perimeter");
@@ -225,5 +216,7 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
       dataset.add(geometry, asWKT, ResourceFactory.createPlainLiteral(nbdEntity.getGeometry().toText()));
     }
     RDFDataMgr.write(datasetFile, dataset, RDFFormat.TURTLE_BLOCKS);
+
+     */
   }
 }

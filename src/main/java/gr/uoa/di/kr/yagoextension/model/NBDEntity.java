@@ -2,41 +2,18 @@ package gr.uoa.di.kr.yagoextension.model;
 
 import org.locationtech.jts.geom.Geometry;
 
+import java.util.HashMap;
 import java.util.Set;
 
 public class NBDEntity extends Entity {
-  private String gnisID;
-  private double shapeLength;
-  private double shapeArea;
-  private String datasetDesc;
-  private String fCode;
+  private HashMap<String,String> properties ;
 
-  public NBDEntity(String id, Set<String> labels, Geometry geom, String gnisID, double shapeLength, double shapeArea, String datasetDesc, String fCode) {
+  public NBDEntity(String id, Set<String> labels, Geometry geom, HashMap<String, String> properties) {
     super(id, labels, geom);
-    this.gnisID = gnisID;
-    this.shapeLength = shapeLength;
-    this.shapeArea = shapeArea;
-    this.datasetDesc = datasetDesc;
-    this.fCode = fCode;
+    this.properties = properties;
   }
 
-  public String getGnisID() {
-    return gnisID;
-  }
-
-  public double getShapeLength() {
-    return shapeLength;
-  }
-
-  public double getShapeArea() {
-    return shapeArea;
-  }
-
-  public String getDatasetDesc() {
-    return datasetDesc;
-  }
-
-  public String getfCode() {
-    return fCode;
+  public HashMap<String, String> getProperties() {
+    return properties;
   }
 }
