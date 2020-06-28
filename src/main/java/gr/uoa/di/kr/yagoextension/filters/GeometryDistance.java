@@ -16,7 +16,10 @@ import gr.uoa.di.kr.yagoextension.model.GeometryMatches;
  */
 
 public class GeometryDistance {
-	
+
+	// original 0.2
+	// incorps 5 w 9753 matches
+	// incorps 20 w 11548
 	public static double threshold = 0.2;
 	
 	public static GeometryMatches filter(LabelMatches labelMatches) {
@@ -32,16 +35,29 @@ public class GeometryDistance {
 			Entity best = null;
 			
 			for(Entity datasourceEntity : datasourceEntities) {
+				/*
+				if (yagoGeom.within(datasourceEntity.getGeometry())){
+					best = datasourceEntity ;
+					break;
+				}
+				*/
+
+
 				double curDist = yagoGeom.distance(datasourceEntity.getGeometry());
 				if(curDist < bestDist) {
 					bestDist = curDist;
 					best = datasourceEntity;
 				}
 			}
-			
+			if (best != null) {
+				geomMatches.addMatch(best, yagoEntity, bestDist);
+			} else System.out.println("Didnt find a match for yago entity " + yagoEntity.getLabels().iterator().next() + " at " +
+					yagoEntity.getGeometry().toText());
+			/*
 			if(bestDist <= threshold) {
 				geomMatches.addMatch(best, yagoEntity, bestDist);
 			}
+			*/
 			
 		}
 		return geomMatches;
