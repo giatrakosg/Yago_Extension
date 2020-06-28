@@ -82,7 +82,7 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
                   if (value == null){
                       properties.put(col, "nan");
                   } else {
-                      properties.put(col,value.toString());
+                    //  properties.put(col,value.toString());
                   }
               }
           }
@@ -185,14 +185,10 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
 
   @Override
   public void generate(Map<String, String> matches, OutputStream datasetFile) {
-    /*
+
     Model dataset = ModelFactory.createDefaultModel();
     Set<String> matchedEntities = matches.keySet();
-    entities.
-    Property area = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasOSNI_Area");
-    Property areasqkm = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasOSNI_AreaSqKm");
-    Property perimeter = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasOSNI_Perimeter");
-    Property type = ResourceFactory.createProperty(RDFVocabulary.TYPE);
+
     Property name = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasONSI_Name");
     Property id = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY, "hasOSNI_ID");
     Property hasGeometry = ResourceFactory.createProperty(RDFVocabulary.HAS_GEOMETRY);
@@ -203,20 +199,27 @@ class NBDRepository extends Repository<NBDEntity> implements RDFReader {
       if(matchedEntities.contains(nbdEntity.getURI()))
         subject = ResourceFactory.createResource(matches.get(nbdEntity.getURI()));
       else
-        subject = ResourceFactory.createResource(YAGO2geoVocabulary.RESOURCE+"nbdentity"+nbdEntity.getNbdID());
-      Resource geometry = ResourceFactory.createResource(YAGO2geoVocabulary.ONTOLOGY+"Geometry_osni_"+nbdEntity.getNbdID());
-      if(nbdEntity.getAreasqkm() != null)
-        dataset.add(subject, area, ResourceFactory.createTypedLiteral(nbdEntity.getAreasqkm()));
-      if(nbdEntity.getAreasqkm() != null)
-        dataset.add(subject, areasqkm, ResourceFactory.createTypedLiteral(nbdEntity.getAreasqkm()));
-      dataset.add(subject, id, ResourceFactory.createTypedLiteral(nbdEntity.getNbdID()));
+        subject = ResourceFactory.createResource(YAGO2geoVocabulary.RESOURCE+"nbdentity"+nbdEntity.getURI());
+      Resource geometry = ResourceFactory.createResource(YAGO2geoVocabulary.ONTOLOGY+"Geometry_osni_"+nbdEntity.getURI());
+      dataset.add(subject, id, ResourceFactory.createTypedLiteral(nbdEntity.getURI()));
       nbdEntity.getLabels().forEach(label -> dataset.add(subject, name, ResourceFactory.createStringLiteral(label)));
+
+      HashMap<String,String> properties = nbdEntity.getProperties() ;
+      Iterator it = properties.entrySet().iterator();
+      while (it.hasNext()) {
+          Map.Entry pair = (Map.Entry)it.next();
+          String property = (String) pair.getKey();
+          String value = (String) pair.getValue();
+
+          Property prop = ResourceFactory.createProperty(YAGO2geoVocabulary.ONTOLOGY,property);
+          dataset.add(subject, prop, value);
+          it.remove(); // avoids a ConcurrentModificationException
+      }
+
       //dataset.add(subject, type, ResourceFactory.createResource(YAGO2geoVocabulary.ONTOLOGY+nbdEntity.getDivision()));
       dataset.add(subject, hasGeometry, geometry);
       dataset.add(geometry, asWKT, ResourceFactory.createPlainLiteral(nbdEntity.getGeometry().toText()));
     }
     RDFDataMgr.write(datasetFile, dataset, RDFFormat.TURTLE_BLOCKS);
-
-     */
   }
 }

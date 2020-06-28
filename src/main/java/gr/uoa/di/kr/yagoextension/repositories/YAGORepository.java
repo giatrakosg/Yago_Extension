@@ -41,6 +41,7 @@ class YAGORepository extends Repository<Entity> implements TSVReader {
       for(CSVRecord record : parser.getRecords()) {
         String subject = record.get(0);
         subject = subject.replace("<", "").replace(">","");
+        subject = subject.replace("\"","");
         String predicate = record.get(1);
         if(predicate.contains(YAGOVocabulary.LABEL_TSV)) {
           String object = record.get(2);
@@ -71,6 +72,8 @@ class YAGORepository extends Repository<Entity> implements TSVReader {
       /* create the wkt serialization from the given (long, lat) pair */
       String latitude = latitudes.get(subject);
       String longitude = longitudes.get(subject);
+      latitude = latitude.replace("\"","");
+      longitude = longitude.replace("\"","");
       String wkt = "POINT( "+longitude+" "+latitude+" )";
       try {
         entities.add(new Entity(YAGOVocabulary.NAMESPACE+subject, labels.get(subject), wktReader.read(wkt)));
